@@ -18,4 +18,14 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+// Memory logs table for storing agent interactions
+export const memoryLogs = mysqlTable("memory_logs", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  agentName: varchar("agentName", { length: 128 }).notNull(),
+  inputText: text("inputText"),
+  outputText: text("outputText"),
+});
+
+export type MemoryLog = typeof memoryLogs.$inferSelect;
+export type InsertMemoryLog = typeof memoryLogs.$inferInsert;

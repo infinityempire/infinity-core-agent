@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertMemoryLog, InsertUser, memoryLogs, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -85,4 +85,39 @@ export async function getUser(id: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// Memory logs management
+export async function storeMemoryLog(log: InsertMemoryLog): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot store memory log: database not available");
+    return;
+  }
+
+  try {
+    await db.insert(memoryLogs).values(log);
+  } catch (error) {
+    console.error("[Database] Failed to store memory log:", error);
+    throw error;
+  }
+}
+
+export async function getMemoryHistory(agentName: string, limit: number = 50) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get memory history: database not available");
+    return [];
+  }
+
+  try {
+    const result = await db
+      .select()
+      .from(memoryLogs)
+      .where(eq(memoryLogs.agentName, agentName))
+      .orderBy(desc(memoryLogs.timestamp))
+      .limit(limit);
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get memory history:", error);
+    throw error;
+  }
+}
